@@ -2,22 +2,21 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven'   // Make sure it's capital M as configured in Jenkins
+        maven 'Maven'  // Maven tool configured in Jenkins
     }
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub') // ID of your Jenkins credential
-        IMAGE_NAME = "janffy/springboot-ecommerce"       // Your Docker Hub repo
+        IMAGE_NAME = "janffy/springboot-ecommerce"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/janffy1/springboot-ecommerce.git'
+                git 'https://github.com/janffy1/spring-ecommerce-api.git'
             }
         }
 
-        stage('Build Maven Project') {
+        stage('Build') {
             steps {
                 sh 'mvn clean install'
             }
@@ -25,17 +24,17 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh "docker build -t $IMAGE_NAME ."
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Docker Login & Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $IMAGE_NAME
-                        docker logout
+                       echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                       docker push $IMAGE_NAME
+                       docker logout
                     '''
                 }
             }
@@ -43,7 +42,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo 'Deployment step goes here (e.g., SSH into server and run Docker container)'
+                echo 'Add your deploy commands here (e.g. SSH and run docker container)'
             }
         }
     }
