@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/janffy1/spring-ecommerce-api.git'
+                git branch: 'main', url: 'https://github.com/janffy1/spring-ecommerce-api.git'
             }
         }
 
