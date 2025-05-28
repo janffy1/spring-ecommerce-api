@@ -2,17 +2,18 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven' // Use the exact name from Jenkins Global Tool Configuration
+        maven 'Maven'   // Make sure it's capital M as configured in Jenkins
     }
 
     environment {
-        IMAGE_NAME = "janffy1/spring-ecommerce-api:${env.BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub') // ID of your Jenkins credential
+        IMAGE_NAME = "janffy/springboot-ecommerce"       // Your Docker Hub repo
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/janffy1/spring-ecommerce-api.git'
+                git 'https://github.com/janffy1/springboot-ecommerce.git'
             }
         }
 
@@ -24,26 +25,26 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}")
-                }
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh "docker push ${IMAGE_NAME}"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME
+                        docker logout
+                    '''
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "Deploying ${IMAGE_NAME} - Add your deploy commands here (e.g., SSH into EC2 and run Docker commands)"
+                echo 'Deployment step goes here (e.g., SSH into server and run Docker container)'
             }
         }
     }
 }
-
