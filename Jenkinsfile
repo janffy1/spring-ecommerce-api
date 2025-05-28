@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven' // Make sure this matches the Maven name set in Jenkins Global Tool Configuration
+        maven 'Maven' // Use the exact name from Jenkins Global Tool Configuration
+    }
+
+    environment {
+        IMAGE_NAME = "janffy1/spring-ecommerce-api:${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -21,7 +25,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("janffy1/spring-ecommerce-api:${env.BUILD_NUMBER}")
+                    dockerImage = docker.build("${IMAGE_NAME}")
                 }
             }
         }
@@ -30,16 +34,16 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh "docker push janffy1/spring-ecommerce-api:${env.BUILD_NUMBER}"
+                    sh "docker push ${IMAGE_NAME}"
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                // Add your deployment script here, e.g. SSH to your server and run docker commands
-                echo 'Deploy stage - add your deployment commands here'
+                echo "Deploying ${IMAGE_NAME} - Add your deploy commands here (e.g., SSH into EC2 and run Docker commands)"
             }
         }
     }
 }
+
